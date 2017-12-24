@@ -1,9 +1,18 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 # Standard imports
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import *
 import json
 import requests
 import logging
 import arrow
 import attrdict as ad
+import copy
 
 # Our imports
 import emission.core.get_database as edb
@@ -90,12 +99,18 @@ def give_points(user_id, task, curr_state):
         logging.debug("Request to score bike points %s" % res2)
 
       #update the timestamp and bike/walk counts in db
-      new_state = {'last_timestamp': summary_ts["last_ts_processed"] + esp.END_FUZZ_AVOID_LTE,
+      new_state = {'last_timestamp': float(summary_ts["last_ts_processed"] + esp.END_FUZZ_AVOID_LTE),
               'bike_count': bike_distance%bike_scale,
               'walk_count': walk_distance%walk_scale}
 
     logging.debug("Returning %s" % new_state)
     return new_state
 
-
+def reset_to_ts(user_id, ts, task, curr_state):
+    new_state = copy.copy(curr_state)
+    new_state['last_timestamp'] = ts
+    # We don't know what the leftover walk/bike stuff without re-running from
+    # scratch, so let's leave it untouched. Error can be max 1 point, which is
+    # not too bad.
+    return new_state
 

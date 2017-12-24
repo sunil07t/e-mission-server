@@ -1,3 +1,10 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 import logging
 import emission.storage.decorations.stats_queries as esds
 
@@ -47,13 +54,14 @@ def old2new(old_style_data):
     import emission.core.wrapper.statsevent as ecws
     import emission.core.wrapper.battery as ecwb
 
+    none2None = lambda s: None if s == 'none' else s
     float_with_none = lambda s: float(s) if s is not None else None
 
     user_id = old_style_data["user"]
     del old_style_data["user"]
     if old_style_data["stat"] == "battery_level":
         new_style_data = ecwb.Battery({
-            "battery_level_pct" : float_with_none(old_style_data["reading"]),
+            "battery_level_pct" : float_with_none(none2None(old_style_data["reading"])),
             "ts": old_style_data["ts"]
         })
         new_key = "background/battery"
@@ -61,7 +69,7 @@ def old2new(old_style_data):
         new_style_data = ecws.Statsevent()
         new_style_data.name = old_style_data["stat"]
         new_style_data.ts = old_style_data["ts"]
-        new_style_data.reading = float_with_none(old_style_data["reading"])
+        new_style_data.reading = float_with_none(none2None(old_style_data["reading"]))
         new_style_data.client_app_version = old_style_data["client_app_version"]
         new_style_data.client_os_version = old_style_data["client_os_version"]
         new_key = stat2key(old_style_data["stat"])
@@ -87,10 +95,23 @@ def stat2key(stat_name):
         "sync_launched": "stats/client_nav_event",
         "button_sync_forced": "stats/client_nav_event",
         "sync_pull_list_size": "stats/client_time",
+        "sync_push_list_size": "stats/client_time",
+        "confirmlist_ucs_size": "stats/client_time",
+        "confirmlist_resume": "stats/client_nav_event",
+        "result_display_duration": "stats/client_time",
+        "button_confirm_all": "stats/client_nav_event",
+        "button_confirm_all_skipped": "stats/client_nav_event",
+        "button_moves_linked": "stats/client_nav_event",
+        "confirmlist_auth_not_done": "stats/client_nav_event",
+        "button_account_changed": "stats/client_nav_event",
+        "result_display_failed": "stats/client_error",
         "pull_duration": "stats/client_time"
     }
+    # Old-style stats never stored server_api_error
+    # https://github.com/e-mission/e-mission-server/commit/7487c82578e8933f4da8f9d3fa3522c102906c81#diff-a6a7bc47405d23c166d7b6f86bea4d2eR588
+    # And we are not converting result stats, so we don't care
+    # hahaha
     return stat_name_mapping[stat_name]
-
 
 def createEntry(user, stat, ts, reading):
    return {'user': user,
@@ -98,30 +119,3 @@ def createEntry(user, stat, ts, reading):
            'ts': float(ts),
            'reading': reading}
 
-# Dummy functions to keep the old, obsolete code happy.
-# Will do a big purge over winter break
-
-STAT_TRIP_MGR_PCT_SHOWN = "tripManager.pctShown"
-STAT_TRIP_MGR_TRIPS_FOR_DAY = "tripManager.tripsForDay"
-
-STAT_MY_CARBON_FOOTPRINT = "footprint.my_carbon"
-STAT_MY_CARBON_FOOTPRINT_NO_AIR = "footprint.my_carbon.no_air"
-STAT_MY_OPTIMAL_FOOTPRINT = "footprint.optimal"
-STAT_MY_OPTIMAL_FOOTPRINT_NO_AIR = "footprint.optimal.no_air"
-STAT_MY_ALLDRIVE_FOOTPRINT = "footprint.alldrive"
-
-STAT_PCT_CLASSIFIED = "game.score.pct_classified"
-STAT_MINE_MINUS_OPTIMAL = "game.score.mine_minus_optimal"
-STAT_ALL_DRIVE_MINUS_MINE = "game.score.all_drive_minus_mine"
-STAT_SB375_DAILY_GOAL = "game.score.sb375_daily_goal"
-
-STAT_MEAN_FOOTPRINT = "footprint.mean"
-STAT_MEAN_FOOTPRINT_NO_AIR = "footprint.mean.no_air"
-STAT_GAME_SCORE = "game.score"
-STAT_VIEW_CHOICE = "view.choice"
-
-def storeServerEntry(user, stat, ts, reading):
-    pass
-
-def storeResultEntry(user, stat, ts, reading):
-    pass

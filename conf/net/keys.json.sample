@@ -1,0 +1,4 @@
+{
+  "ssl_certificate" : "xxxxx-signed-cert.pem",
+  "private_key" : "xxxxx_privkey.key",
+}
